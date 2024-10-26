@@ -96,94 +96,37 @@ router.route('/id/:id')
         })
     }
   })
-
-  router.get('/id/:id/tags',async (req, res)=>{
-    const { id } = req.params;
-    const getTags = await Blog.findOne(
-        { id : parseInt(id)}, 'tags'
-    )
-    if(getTags){
-        res.json({
-            getTags,
-            success : true,
-        })
-    }else{
-        res.json({
-            message : "Can't get the tags of the given id",
-            success : false,
-        })
-    }
-  })
   
-  router.get('/id/:id/author',async (req, res)=>{
-    const { id } = req.params;
-    const getTags = await Blog.findOne(
-        { id : parseInt(id)}, 'username'
-    )
-    if(getTags){
-        res.json({
-            getTags,
-            success : true,
-        })
-    }else{
-        res.json({
-            message : "Can't get the author of the given blog id",
-            success : false,
-        })
-    }
-  })
+router.get('/id/:id/:key', async (req, res) => {
+    const { id, key } = req.params;
 
-  router.get('/id/:id/title',async (req, res)=>{
-    const { id } = req.params;
-    const getTags = await Blog.findOne(
-        { id : parseInt(id)}, 'title'
-    )
-    if(getTags){
-        res.json({
-            getTags,
-            success : true,
-        })
-    }else{
-        res.json({
-            message : "Can't get the title of the given blog id",
-            success : false,
-        })
-    }
-  })
+    try {
+        // Dynamically create the projection object for the key
+        const projection = { [key]: 1, _id: 0 }; // Only select the key and exclude _id
 
-  router.get('/id/:id/keywords',async (req, res)=>{
-    const { id } = req.params;
-    const getTags = await Blog.findOne(
-        { id : parseInt(id)}, 'keywords'
-    )
-    if(getTags){
-        res.json({
-            getTags,
-            success : true,
-        })
-    }else{
-        res.json({
-            message : "Can't get the keywords of the given blog id",
-            success : false,
-        })
-    }
-  })
+        // Fetch the blog with only the specified field
+        const blog = await Blog.findOne({ id: parseInt(id) }, projection);
 
-  router.get('/id/:id/content',async (req, res)=>{
-    const { id } = req.params;
-    const getTags = await Blog.findOne(
-        { id : parseInt(id)}, 'content'
-    )
-    if(getTags){
-        res.json({
-            getTags,
-            success : true,
-        })
-    }else{
-        res.json({
-            message : "Can't get the content of the given blog id",
-            success : false,
-        })
+        if (blog && blog[key] !== undefined) {
+            // If the blog and the key field exist, respond with the specific field value
+            res.json({
+                [key]: blog[key],
+                success: true,
+            });
+        } else {
+            // If the key is invalid or the blog isn't found
+            res.status(404).json({
+                success: false,
+                message: "Requested field not found in the blog, or blog does not exist.",
+            });
+        }
+    } catch (error) {
+        // Catch any errors and send an error response
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching the blog field.",
+            error: error.message,
+        });
     }
-  })
+});
 module.exports = router;

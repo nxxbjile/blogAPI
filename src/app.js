@@ -11,10 +11,19 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended : true}));
 
+
 app.use('/users',Authenticate, userRoutes);
 app.use('/blogs',blogRoutes);
 app.use('/search',searchRoutes);
 app.use('/auth', authRoutes);
+
+app.use((req,res)=>{
+  res.json({
+    message:"Requested endpoint or method doesn't exist",
+    success:false,
+  })  
+})
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=>{
