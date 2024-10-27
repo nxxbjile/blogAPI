@@ -72,35 +72,38 @@ router.get('/', async (req, res)=>{
     }
   })
 
-  router.get('/username/:username',async (req, res)=>{
-    const { username } = req.params;
-    const user = await getUserByUsername(username);
-    res.json({
-        user,
-        success : true,
-    });
-  })
-  
-  router.get('/firstname/:firstname', async (req , res)=>{
-    const { firstname } = req.params;
-    const { page , limit } = req.query;
-    const result = await getUserByFirstName(firstname, page, limit);
-    res.json({
-        result,
-        success: result.length >=1,
-    });
-  })
-  
-  router.get('/lastname/:lastname', async (req , res)=>{
-    const { lastname } = req.params;
-    const { page , limit } = req.query;
-    const result = await getUserByLastName(lastname, page, limit);
-    res.json({
-        result,
-        success: result.length >=1,
-    });
-  })
-  
+  router.get('/id/:id/:key', async (req, res) => {
+    const { id, key } = req.params;
+
+    try {
+        // Dynamically create the projection object for the key
+        const projection = { [key]: 1, _id: 0 }; // Only select the key and exclude _id
+
+        // Fetch the blog with only the specified field
+        const blog = await User.findOne({ id: parseInt(id) }, projection);
+
+        if (blog && blog[key] !== undefined) {
+            // If the blog and the key field exist, respond with the specific field value
+            res.json({
+                [key]: blog[key],
+                success: true,
+            });
+        } else {
+            // If the key is invalid or the blog isn't found
+            res.status(404).json({
+                success: false,
+                message: "Requested field not found in the blog, or blog does not exist.",
+            });
+        }
+    } catch (error) {
+        // Catch any errors and send an error response
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching the blog field.",
+            error: error.message,
+        });
+    }
+});
 // handling post requests
 
 router.post('/user', async (req, res)=>{
